@@ -1,0 +1,6 @@
+#!/home/shafayet/Desktop/insurance-premium-predictor-project/.venv311/bin/python
+import sys
+from uvicorn.main import main
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(main())
