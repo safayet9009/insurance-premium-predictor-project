@@ -148,8 +148,8 @@ The API returns:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/safayet9009/insurance-premium-predictor.git
-cd insurance-premium-predictor
+git clone https://github.com/safayet9009/insurance-premium-predictor-project.git
+cd insurance-premium-predictor-project
 ```
 
 ### 2. Create a Python environment
