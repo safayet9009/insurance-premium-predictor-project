@@ -2,7 +2,9 @@
 
 An end-to-end **Machine Learning application** that predicts an individual's insurance premium category based on personal, lifestyle, financial, and demographic information.
 
-The project combines a trained **Scikit-learn classification model** with a **FastAPI backend** and an interactive **Streamlit frontend**, with Docker support for containerized deployment.
+The project combines a trained **Scikit-learn classification model** with a **FastAPI backend** and an interactive **Streamlit frontend**, with **Docker and Docker Compose** support for containerized deployment.
+
+The backend and frontend Docker images are also published on **Docker Hub** for easy deployment.
 
 ---
 
@@ -17,7 +19,9 @@ The project combines a trained **Scikit-learn classification model** with a **Fa
 * 👤 Automatic age-group classification
 * 🚬 Lifestyle risk calculation
 * 🏙️ City-tier classification
-* 🐳 Docker support
+* 🐳 Docker containerization
+* 🐳 Docker Compose for frontend + backend orchestration
+* 📦 Docker Hub images
 * 📚 Automatic Swagger API documentation
 * 🔍 Health-check endpoint
 
@@ -26,49 +30,77 @@ The project combines a trained **Scikit-learn classification model** with a **Fa
 ## 🏗️ Architecture
 
 ```text
-                    ┌──────────────────────┐
-                    │   Streamlit Frontend │
-                    │        :8501         │
-                    └──────────┬───────────┘
-                               │
-                         POST /predict
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │   FastAPI Backend    │
-                    │        :8000         │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │   Pydantic Schema    │
-                    │      Validation      │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │ Feature Engineering  │
-                    │                      │
-                    │ BMI                  │
-                    │ Age Group            │
-                    │ Lifestyle Risk       │
-                    │ City Tier            │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │ Scikit-learn Model   │
-                    │      model.pkl       │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │ Prediction Response  │
-                    │                      │
-                    │ Category             │
-                    │ Confidence           │
-                    │ Class Probabilities  │
-                    └──────────────────────┘
+                         Browser
+                            │
+                            ▼
+                ┌──────────────────────┐
+                │  Streamlit Frontend  │
+                │       :8501          │
+                └──────────┬───────────┘
+                           │
+                           │ POST /predict
+                           ▼
+                ┌──────────────────────┐
+                │   FastAPI Backend    │
+                │       :8000          │
+                └──────────┬───────────┘
+                           │
+                           ▼
+                ┌──────────────────────┐
+                │   Pydantic Schema    │
+                │      Validation      │
+                └──────────┬───────────┘
+                           │
+                           ▼
+                ┌──────────────────────┐
+                │  Feature Engineering │
+                │                      │
+                │  BMI                 │
+                │  Age Group           │
+                │  Lifestyle Risk      │
+                │  City Tier           │
+                └──────────┬───────────┘
+                           │
+                           ▼
+                ┌──────────────────────┐
+                │  Scikit-learn Model  │
+                │      model.pkl       │
+                └──────────┬───────────┘
+                           │
+                           ▼
+                ┌──────────────────────┐
+                │  Prediction Response │
+                │                      │
+                │  Category            │
+                │  Confidence          │
+                │  Class Probabilities │
+                └──────────────────────┘
+```
+
+### Docker Compose Architecture
+
+```text
+                         Host Machine
+                              │
+                ┌─────────────┴─────────────┐
+                │                           │
+                ▼                           ▼
+       ┌─────────────────┐         ┌─────────────────┐
+       │    Frontend     │         │     Backend     │
+       │   Streamlit     │────────▶│     FastAPI     │
+       │     :8501       │  HTTP   │      :8000      │
+       └─────────────────┘         └────────┬────────┘
+                                            │
+                                            ▼
+                                      ┌─────────────┐
+                                      │  model.pkl  │
+                                      └─────────────┘
+```
+
+The Streamlit frontend communicates with the backend using the Docker Compose service name:
+
+```text
+http://backend:8000
 ```
 
 ---
@@ -76,11 +108,12 @@ The project combines a trained **Scikit-learn classification model** with a **Fa
 ## 📁 Project Structure
 
 ```text
-insurance-premium-predictor/
+insurance-premium-predictor-project/
 │
 ├── app.py
 ├── requirements.txt
 ├── Dockerfile
+├── docker-compose.yml
 ├── .dockerignore
 │
 ├── config/
@@ -95,7 +128,8 @@ insurance-premium-predictor/
 │   └── prediction_response.py
 │
 └── frontend/
-    └── streamlit_app.py
+    ├── streamlit_app.py
+    └── Dockerfile
 ```
 
 ---
@@ -114,7 +148,7 @@ The application accepts the following user information:
 | `city`       | User's city                  |
 | `occupation` | User's occupation            |
 
-The application then derives additional features:
+The application derives additional features automatically:
 
 * BMI
 * Age Group
@@ -127,7 +161,7 @@ These features are passed to the trained machine learning model.
 
 ## 📊 Prediction Output
 
-The API returns:
+The API returns the predicted insurance premium category, confidence score, and probability distribution across all classes.
 
 ```json
 {
@@ -143,16 +177,19 @@ The API returns:
 
 ---
 
-## ⚙️ Local Setup
+# ⚙️ Local Setup
 
-### 1. Clone the repository
+## 1. Clone the Repository
 
 ```bash
 git clone https://github.com/safayet9009/insurance-premium-predictor-project.git
+
 cd insurance-premium-predictor-project
 ```
 
-### 2. Create a Python environment
+---
+
+## 2. Create a Python Environment
 
 This project uses **Python 3.11**.
 
@@ -166,7 +203,9 @@ Activate the environment on Linux/macOS:
 source .venv/bin/activate
 ```
 
-### 3. Install dependencies
+---
+
+## 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -174,7 +213,7 @@ pip install -r requirements.txt
 
 ---
 
-## ▶️ Run FastAPI Backend
+# ▶️ Run FastAPI Backend Locally
 
 Start the API server:
 
@@ -198,13 +237,25 @@ http://127.0.0.1:8000/docs
 
 ### Health Check
 
+Open:
+
 ```text
 http://127.0.0.1:8000/health
 ```
 
+Expected response:
+
+```json
+{
+  "status": "OK",
+  "version": "1.0.0",
+  "model_loaded": true
+}
+```
+
 ---
 
-## 🎨 Run Streamlit Frontend
+# 🎨 Run Streamlit Frontend Locally
 
 Open another terminal and activate the environment:
 
@@ -212,7 +263,7 @@ Open another terminal and activate the environment:
 source .venv/bin/activate
 ```
 
-Then run:
+Run:
 
 ```bash
 streamlit run frontend/streamlit_app.py
@@ -224,29 +275,33 @@ The frontend will be available at:
 http://localhost:8501
 ```
 
+> When running the frontend and backend directly on the host machine, the Streamlit application communicates with FastAPI through `127.0.0.1:8000`.
+
 ---
 
-## 🐳 Docker
+# 🐳 Docker
 
-Build the Docker image:
+The project supports Docker-based containerization.
+
+## Build Backend Image
 
 ```bash
 docker build -t insurance-premium-api .
 ```
 
-Run the container:
+Run:
 
 ```bash
 docker run -p 8000:8000 insurance-premium-api
 ```
 
-The FastAPI backend will then be available at:
+The FastAPI backend will be available at:
 
 ```text
 http://localhost:8000
 ```
 
-Swagger documentation:
+Swagger:
 
 ```text
 http://localhost:8000/docs
@@ -254,11 +309,137 @@ http://localhost:8000/docs
 
 ---
 
-## 🔌 API Endpoint
+# 🐳 Docker Compose
 
-### `POST /predict`
+The recommended way to run the complete application is using Docker Compose.
 
-Example request:
+Docker Compose runs:
+
+* FastAPI backend
+* Streamlit frontend
+* Internal Docker network between the services
+
+Start the complete application:
+
+```bash
+docker compose up -d
+```
+
+Check running containers:
+
+```bash
+docker compose ps
+```
+
+Expected services:
+
+```text
+insurance-premium-backend
+insurance-premium-frontend
+```
+
+### Application URLs
+
+**Streamlit Frontend:**
+
+```text
+http://localhost:8501
+```
+
+**FastAPI Backend:**
+
+```text
+http://localhost:8000
+```
+
+**Swagger API Documentation:**
+
+```text
+http://localhost:8000/docs
+```
+
+**Health Check:**
+
+```text
+http://localhost:8000/health
+```
+
+### Stop the application
+
+```bash
+docker compose down
+```
+
+### Rebuild images
+
+```bash
+docker compose build
+```
+
+Then start again:
+
+```bash
+docker compose up -d
+```
+
+---
+
+# 📦 Docker Hub
+
+The application images are published on Docker Hub.
+
+**Docker Hub Repository:**
+
+```text
+https://hub.docker.com/r/safayet7/insurance-premium-predictor
+```
+
+### Backend Image
+
+```bash
+docker pull safayet7/insurance-premium-predictor:backend
+```
+
+### Frontend Image
+
+```bash
+docker pull safayet7/insurance-premium-predictor:frontend
+```
+
+### Available Images
+
+```text
+safayet7/insurance-premium-predictor:backend
+safayet7/insurance-premium-predictor:frontend
+```
+
+The backend image contains:
+
+```text
+FastAPI
+Scikit-learn model
+Pydantic validation
+Feature engineering
+Prediction API
+```
+
+The frontend image contains:
+
+```text
+Streamlit
+Prediction UI
+HTTP communication with FastAPI
+```
+
+---
+
+# 🔌 API Endpoint
+
+## `POST /predict`
+
+Predict the insurance premium category.
+
+### Example Request
 
 ```json
 {
@@ -272,7 +453,7 @@ Example request:
 }
 ```
 
-Example response:
+### Example Response
 
 ```json
 {
@@ -288,7 +469,7 @@ Example response:
 
 ---
 
-## 🛡️ Input Validation
+# 🛡️ Input Validation
 
 The FastAPI backend uses **Pydantic** to validate incoming requests.
 
@@ -301,17 +482,21 @@ Examples of validation rules:
 * Occupation must belong to the predefined categories
 * City names are normalized automatically
 
+Invalid requests return FastAPI validation errors with HTTP status `422`.
+
 ---
 
-## 🔍 Derived Features
+# 🔍 Derived Features
 
-### BMI
+## BMI
 
 ```text
 BMI = Weight / Height²
 ```
 
-### Age Group
+---
+
+## Age Group
 
 ```text
 Age < 25       → young
@@ -320,7 +505,9 @@ Age < 25       → young
 60+            → senior
 ```
 
-### Lifestyle Risk
+---
+
+## Lifestyle Risk
 
 The application combines smoking status and BMI to estimate lifestyle risk:
 
@@ -330,7 +517,9 @@ Smoker OR BMI >27 → Medium
 Otherwise         → Low
 ```
 
-### City Tier
+---
+
+## City Tier
 
 Cities are categorized into:
 
@@ -340,9 +529,11 @@ Tier 2
 Tier 3
 ```
 
+The city tier is automatically determined using the project's city configuration.
+
 ---
 
-## 🧰 Technology Stack
+# 🧰 Technology Stack
 
 ### Backend
 
@@ -363,14 +554,15 @@ Tier 3
 * Streamlit
 * Requests
 
-### Deployment
+### Containerization & Deployment
 
 * Docker
-* Docker Engine
+* Docker Compose
+* Docker Hub
 
 ---
 
-## 📌 Project Highlights
+# 📌 Project Highlights
 
 This project demonstrates an end-to-end ML deployment workflow:
 
@@ -390,13 +582,17 @@ Prediction
 Streamlit UI
         ↓
 Docker Containerization
+        ↓
+Docker Compose
+        ↓
+Docker Hub
 ```
 
-It is designed to demonstrate how a machine learning model can be transformed into a practical, production-style application rather than remaining only inside a Jupyter Notebook.
+The project demonstrates how a machine learning model can be transformed into a practical, containerized application rather than remaining only inside a Jupyter Notebook.
 
 ---
 
-## 🔮 Future Improvements
+# 🔮 Future Improvements
 
 * [ ] Deploy the FastAPI backend to a cloud platform
 * [ ] Deploy the Streamlit frontend
@@ -406,12 +602,12 @@ It is designed to demonstrate how a machine learning model can be transformed in
 * [ ] Add automated API testing
 * [ ] Add model versioning
 * [ ] Add authentication and API security
-* [ ] Add Docker Compose for frontend + backend
 * [ ] Add database integration for prediction history
+* [ ] Add automated Docker image publishing through GitHub Actions
 
 ---
 
-## 👨‍💻 Author
+# 👨‍💻 Author
 
 **Safayet Hossain**
 
@@ -422,6 +618,6 @@ GitHub: [@safayet9009](https://github.com/safayet9009)
 
 ---
 
-## ⭐ If You Find This Project Useful
+# ⭐ If You Find This Project Useful
 
 Consider giving the repository a ⭐ star and checking out the other projects on my GitHub profile.

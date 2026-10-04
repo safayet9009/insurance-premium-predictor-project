@@ -6,8 +6,8 @@ import requests
 # Configuration
 # ============================================================
 
-API_URL = "http://127.0.0.1:8000/predict"
-HEALTH_URL = "http://127.0.0.1:8000/health"
+API_URL = "http://backend:8000/predict"
+HEALTH_URL = "http://backend:8000/health"
 
 
 # ============================================================
